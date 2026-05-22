@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento AutoZone</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        h1 { font-size: 1.8rem; color: #b91c1c; }
+        h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        label { font-weight: 500; display: block; margin-bottom: 0.3rem; font-size: 0.85rem; color: #334155; }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.6rem;
+            font-size: 0.9rem;
+        }
+        button {
+            background: #b91c1c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.6rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        button:hover { background: #dc2626; transform: translateY(-1px); }
+        button.danger { background: #dc2626; }
+        .btn-icon {
+            background: transparent;
+            color: #334155;
+            padding: 0.3rem;
+        }
+        .btn-icon:hover { background: #e2e8f0; transform: none; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        th { background: #b91c1c; color: white; font-weight: 600; }
+        .totais {
+            background: #f1f5f9;
+            border-radius: 0.8rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #b91c1c;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 2rem;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .theme-toggle { background: transparent; border: 1px solid #e2e8f0; font-size: 1.2rem; }
+
+        /* ESTILO EXCLUSIVO PARA A IMAGEM - TOTAIS APÓS A TABELA */
+        .print-container {
+            background: white;
+            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #0f172a;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .print-header { text-align: center; margin-bottom: 20px; }
+        .print-header h2 { color: #000000 !important; }
+        .print-info { display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; }
+        .print-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .print-table th { background: #b91c1c; color: white; padding: 8px; border: 1px solid #e2e8f0; }
+        .print-table td { padding: 8px; border: 1px solid #cbd5e1; }
+        .print-totals {
+            text-align: right;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            order: 1; /* reforço para garantir que fique após a tabela */
+        }
+        /* Garantia de ordem: tabela antes dos totais */
+        .print-table { order: 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="flex-between" style="margin-bottom: 1rem;">
+        <h1>📄 Orçamento AutoZone</h1>
+        <div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+            <button id="clearAllBtn" class="danger" style="margin-left: 0.5rem;">🗑️ Novo Orçamento</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-header"><h2>🏢 Loja</h2></div>
+            <div class="form-group"><label>Nome da Loja</label><input type="text" id="lojaNome" value="AutoZone Franca Loja 02"></div>
+            <div class="form-group"><label>Endereço</label><input type="text" id="lojaEndereco" value="Av. Chico Julio Nº 2696"></div>
+            <div class="form-group"><label>Telefone</label><input type="text" id="lojaTelefone" value="16 3712-0219"></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h2>👤 Cliente / Veículo</h2></div>
+            <div class="form-group"><label>Nome do Cliente</label><input type="text" id="clienteNome" placeholder="Nome completo"></div>
+            <div class="form-group"><label>Veículo</label><input type="text" id="veiculo" placeholder="Ex: Fiat Uno 2014"></div>
+            <div class="form-group"><label>Vendedor</label><input type="text" id="vendedorNome" value="Jheison Ribeiro"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>🔧 Peças / Serviços</h2>
+            <button id="addItemBtn">+ Adicionar Peça</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="itensTable">
+                <thead><tr><th>Descrição</th><th>Marca</th><th>Bruto (R$)</th><th>Líquido (R$)</th><th>Qtd</th><th style="width:60px">Ações</th></tr></thead>
+                <tbody id="itensBody"></tbody>
+            </table>
+        </div>
+        <div class="flex-between" style="margin-top:1rem">
+            <div><strong>Orçamento Nº:</strong> <span id="orcamentoCodigo">---</span></div>
+            <div><strong>Data:</strong> <span id="dataAtual"></span></div>
+        </div>
+        <div class="totais" id="totaisPanel"></div>
+    </div>
+
+    <div class="card">
+        <div class="flex-between" style="gap:1rem; flex-wrap:wrap;">
+            <button id="copiarWhatsBtn">📱 Copiar para WhatsApp</button>
+            <button id="gerarPdfBtn">🖨️ Gerar PDF</button>
+            <button id="exportarImagemBtn">🖼️ Copiar Imagem (WhatsApp)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let loja = { nome: 'AutoZone Franca Loja 02', endereco: 'Av. Chico Julio Nº 2696', telefone: '16 3712-0219' };
+    let cliente = { nome: '', veiculo: '', vendedor: 'Jheison Ribeiro' };
+    let itens = [];
+    let orcamentoId = 1;
+
+    function incrementarOrcamentoId() {
+        let ultimoId = localStorage.getItem('ultimoOrcamentoId');
+        let novoId = ultimoId ? parseInt(ultimoId) + 1 : 2;
+        localStorage.setItem('ultimoOrcamentoId', novoId);
+        orcamentoId = novoId;
+        document.getElementById('orcamentoCodigo').innerText = orcamentoId;
+        salvarEstado();
+        return orcamentoId;
+    }
+
+    function formatarMoeda(valor) { return 'R$ ' + valor.toFixed(2).replace('.', ','); }
+    function calcularTotais() {
+        let totalBruto = 0, totalLiquido = 0;
+        for (const item of itens) { totalBruto += item.bruto * item.qtd; totalLiquido += item.liquido * item.qtd; }
+        return { totalBruto, totalLiquido };
+    }
+    function atualizarTotaisUI() {
+        const totais = calcularTotais();
+        document.getElementById('totaisPanel').innerHTML = `
+            <div class="flex-between"><span>💰 Total Bruto:</span><strong>${formatarMoeda(totais.totalBruto)}</strong></div>
+            <div class="flex-between" style="margin-top:0.5rem"><span>✅ Total Líquido:</span><strong>${formatarMoeda(totais.totalLiquido)}</strong></div>
+        `;
+    }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    function gerarIdUnico() { return Date.now() + '-' + Math.random().toString(36).substr(2, 6); }
+    
+    function renderizarTabela() {
+        const tbody = document.getElementById('itensBody');
+        tbody.innerHTML = '';
+        for(const item of itens) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="item-nome" value="${escapeHtml(item.nome)}" data-id="${item.id}"></td>
+                <td><input type="text" class="item-marca" value="${escapeHtml(item.marca)}" data-id="${item.id}"></td>
+                <td><input type="number" step="0.01" class="item-bruto" value="${item.bruto}" data-id="${item.id}"></td>
+                <td><input type="number" step="0.01" class="item-liquido" value="${item.liquido}" data-id="${item.id}"></td>
+                <td><input type="number" step="1" min="0" class="item-qtd" value="${item.qtd}" data-id="${item.id}"></td>
+                <td class="item-actions"><button class="btn-icon duplicate-item" data-id="${item.id}">📋</button><button class="btn-icon remove-item" data-id="${item.id}">🗑️</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+        atualizarTotaisUI();
+        salvarEstado();
+    }
+    document.getElementById('itensBody')?.addEventListener('input', (e) => {
+        const target = e.target; const id = target.getAttribute('data-id'); const item = itens.find(i => i.id === id);
+        if(!item) return;
+        if(target.classList.contains('item-nome')) item.nome = target.value;
+        else if(target.classList.contains('item-marca')) item.marca = target.value;
+        else if(target.classList.contains('item-bruto')) item.bruto = Math.max(0, parseFloat(target.value) || 0);
+        else if(target.classList.contains('item-liquido')) item.liquido = Math.max(0, parseFloat(target.value) || 0);
+        else if(target.classList.contains('item-qtd')) item.qtd = Math.max(0, parseInt(target.value) || 0);
+        atualizarTotaisUI(); salvarEstado();
+    });
+    document.getElementById('itensBody')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button'); if(!btn) return; const id = btn.getAttribute('data-id');
+        if(btn.classList.contains('remove-item')) { itens = itens.filter(i => i.id !== id); renderizarTabela(); salvarEstado(); }
+        else if(btn.classList.contains('duplicate-item')) {
+            const original = itens.find(i => i.id === id);
+            if(original) { const novo = { ...original, id: gerarIdUnico(), nome: original.nome + ' (cópia)' }; itens.push(novo); renderizarTabela(); salvarEstado(); }
+        }
+    });
+    document.getElementById('addItemBtn')?.addEventListener('click', () => { itens.push({ id: gerarIdUnico(), nome: 'Nova peça', marca: '', bruto: 0, liquido: 0, qtd: 1 }); renderizarTabela(); salvarEstado(); });
+    
+    function salvarEstado() { localStorage.setItem('orcamentoApp', JSON.stringify({ loja, cliente, itens, orcamentoId })); }
+    function carregarEstado() {
+        const salvo = localStorage.getItem('orcamentoApp');
+        if(salvo) {
+            const data = JSON.parse(salvo);
+            loja = data.loja || { nome: 'AutoZone Franca Loja 02', endereco: 'Av. Chico Julio Nº 2696', telefone: '16 3712-0219' };
+            cliente = data.cliente || { nome: '', veiculo: '', vendedor: 'Jheison Ribeiro' };
+            itens = data.itens || [];
+            orcamentoId = data.orcamentoId || 1;
+            let ultimoIdSalvo = localStorage.getItem('ultimoOrcamentoId');
+            if (!ultimoIdSalvo || orcamentoId > parseInt(ultimoIdSalvo)) localStorage.setItem('ultimoOrcamentoId', orcamentoId);
+        } else {
+            orcamentoId = 1; localStorage.setItem('ultimoOrcamentoId', 1);
+            itens = [
+                { id: gerarIdUnico(), nome: 'Bucha Barra estabilizadora 18mm', marca: 'Valucraft', bruto: 32.99, liquido: 28.04, qtd: 2 },
+                { id: gerarIdUnico(), nome: 'Sensor Nivel Combustivel', marca: 'VP', bruto: 144.99, liquido: 123.24, qtd: 1 }
+            ];
+        }
+        document.getElementById('lojaNome').value = loja.nome;
+        document.getElementById('lojaEndereco').value = loja.endereco;
+        document.getElementById('lojaTelefone').value = loja.telefone;
+        document.getElementById('clienteNome').value = cliente.nome;
+        document.getElementById('veiculo').value = cliente.veiculo || '';
+        document.getElementById('vendedorNome').value = cliente.vendedor;
+        document.getElementById('orcamentoCodigo').innerText = orcamentoId;
+        document.getElementById('dataAtual').innerText = new Date().toLocaleDateString('pt-BR');
+        renderizarTabela();
+    }
+    function atualizarVariaveisFromDOM() {
+        loja.nome = document.getElementById('lojaNome').value;
+        loja.endereco = document.getElementById('lojaEndereco').value;
+        loja.telefone = document.getElementById('lojaTelefone').value;
+        cliente.nome = document.getElementById('clienteNome').value;
+        cliente.veiculo = document.getElementById('veiculo').value;
+        cliente.vendedor = document.getElementById('vendedorNome').value;
+        salvarEstado();
+    }
+    document.getElementById('lojaNome')?.addEventListener('input', atualizarVariaveisFromDOM);
+    document.getElementById('lojaEndereco')?.addEventListener('input', atualizarVariaveisFromDOM);
+    document.getElementById('lojaTelefone')?.addEventListener('input', atualizarVariaveisFromDOM);
+    document.getElementById('clienteNome')?.addEventListener('input', atualizarVariaveisFromDOM);
+    document.getElementById('veiculo')?.addEventListener('input', atualizarVariaveisFromDOM);
+    document.getElementById('vendedorNome')?.addEventListener('input', atualizarVariaveisFromDOM);
+    
+    async function copiarTextoWhatsApp() {
+        incrementarOrcamentoId();
+        atualizarVariaveisFromDOM();
+        const totais = calcularTotais();
+        let texto = `*ORÇAMENTO - ${loja.nome}*\n${loja.endereco}\nTelefone: ${loja.telefone}\n\n`;
+        texto += `*Cliente:* ${cliente.nome || '—'}\n`;
+        if (cliente.veiculo.trim() !== '') texto += `*Veículo:* ${cliente.veiculo}\n`;
+        texto += `*Vendedor:* ${cliente.vendedor}\n\n*PEÇAS:*\n`;
+        for (const item of itens.filter(i => i.qtd > 0)) {
+            texto += `${item.nome} - ${item.marca}\nBruto (Un.): ${formatarMoeda(item.bruto)}\nLíquido (Un.): ${formatarMoeda(item.liquido)}\nQuantidade: ${item.qtd}\n`;
+            if (item.qtd > 1) texto += `Total Bruto: ${formatarMoeda(item.bruto * item.qtd)}\nTotal Líquido: ${formatarMoeda(item.liquido * item.qtd)}\n`;
+            texto += `\n`;
+        }
+        texto += `*RESUMO:*\nTotal Bruto: ${formatarMoeda(totais.totalBruto)}\nTotal Líquido: ${formatarMoeda(totais.totalLiquido)}\n`;
+        await navigator.clipboard.writeText(texto);
+        mostrarToast('✅ Texto copiado! Cole no WhatsApp.');
+    }
+    document.getElementById('copiarWhatsBtn')?.addEventListener('click', copiarTextoWhatsApp);
+    
+    async function gerarPDF() {
+        incrementarOrcamentoId();
+        atualizarVariaveisFromDOM();
+        const totais = calcularTotais();
+        const itensFiltrados = itens.filter(i => i.qtd > 0);
+        let tabelaHtml = `<table style="width:100%; border-collapse: collapse;"><thead><tr style="background:#b91c1c;color:white;"><th>Peça</th><th>Marca</th><th>Bruto (R$)</th><th>Líquido (R$)</th><th>Qtd</th><th>Total Bruto</th><th>Total Líquido</th></tr></thead><tbody>`;
+        for(const item of itensFiltrados) {
+            tabelaHtml += `<tr><td>${escapeHtml(item.nome)}</td><td>${escapeHtml(item.marca)}</td><td>${item.bruto.toFixed(2)}</td><td>${item.liquido.toFixed(2)}</td><td>${item.qtd}</td><td>${(item.bruto*item.qtd).toFixed(2)}</td><td>${(item.liquido*item.qtd).toFixed(2)}</td></tr>`;
+        }
+        tabelaHtml += `</tbody>`;
+        let veiculoHtml = cliente.veiculo.trim() !== '' ? `<p><strong>Veículo:</strong> ${escapeHtml(cliente.veiculo)}</p>` : '';
+        const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Orçamento ${orcamentoId}</title><style>body{font-family:'Segoe UI',sans-serif;margin:20px;}th{background:#b91c1c;color:white;}td,th{padding:8px;border-bottom:1px solid #ccc;}.totais{text-align:right;margin-top:20px;}</style></head><body><h2 style="color:#000000;">${escapeHtml(loja.nome)}</h2><p>${escapeHtml(loja.endereco)}<br>📞 ${escapeHtml(loja.telefone)}</p><p><strong>Código:</strong> ${orcamentoId} | <strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p><p><strong>Cliente:</strong> ${escapeHtml(cliente.nome)}</p>${veiculoHtml}<p><strong>Vendedor:</strong> ${escapeHtml(cliente.vendedor)}</p>${tabelaHtml}<div class="totais"><p><strong>Total Bruto:</strong> R$ ${totais.totalBruto.toFixed(2)}</p><p><strong>Total Líquido:</strong> R$ ${totais.totalLiquido.toFixed(2)}</p></div></body></html>`;
+        const blob = new Blob([htmlContent], {type:'text/html'});
+        const url = URL.createObjectURL(blob);
+        const iframe = document.createElement('iframe');
+        iframe.style.display='none';
+        document.body.appendChild(iframe);
+        iframe.src = url;
+        iframe.onload = () => { iframe.contentWindow.print(); setTimeout(()=>{document.body.removeChild(iframe);URL.revokeObjectURL(url);},1000); };
+        mostrarToast('📄 PDF gerado!');
+    }
+    document.getElementById('gerarPdfBtn')?.addEventListener('click', gerarPDF);
+    
+    // --- IMAGEM CORRIGIDA COM ORDEM ABSOLUTA (TABELA -> TOTAIS) ---
+    async function copiarImagem() {
+        incrementarOrcamentoId();
+        atualizarVariaveisFromDOM();
+        const totais = calcularTotais();
+        const itensFiltrados = itens.filter(i => i.qtd > 0);
+        
+        let tabelaHtml = `<table class="print-table">
+            <thead><tr><th>Peça</th><th>Marca</th><th>Valor Bruto (R$)</th><th>Valor Líquido (R$)</th><th>Quantidade</th><th>Total Bruto (R$)</th><th>Total Líquido (R$)</th></tr></thead>
+            <tbody>`;
+        for (const item of itensFiltrados) {
+            tabelaHtml += `<tr>
+                <td>${escapeHtml(item.nome)}</td>
+                <td>${escapeHtml(item.marca)}</td>
+                <td>${item.bruto.toFixed(2)}</td>
+                <td>${item.liquido.toFixed(2)}</td>
+                <td>${item.qtd}</td>
+                <td>${(item.bruto*item.qtd).toFixed(2)}</td>
+                <td>${(item.liquido*item.qtd).toFixed(2)}</td>
+            </tr>`;
+        }
+        tabelaHtml += `</tbody>`;
+        
+        let veiculoHtml = '';
+        if (cliente.veiculo.trim() !== '') {
+            veiculoHtml = `<div><strong>Veículo:</strong> ${escapeHtml(cliente.veiculo)}</div>`;
+        }
+        
+        // Ordem estritamente vertical: cabeçalho, dados, TABELA, TOTAIS
+        const htmlContent = `
+            <div class="print-container">
+                <div class="print-header">
+                    <h2>${escapeHtml(loja.nome)}</h2>
+                    <p>${escapeHtml(loja.endereco)}<br>📞 ${escapeHtml(loja.telefone)}</p>
+                </div>
+                <div class="print-info">
+                    <div><strong>Orçamento Nº:</strong> ${orcamentoId}</div>
+                    <div><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+                </div>
+                <div><strong>Cliente:</strong> ${escapeHtml(cliente.nome)}</div>
+                ${veiculoHtml}
+                <div><strong>Vendedor:</strong> ${escapeHtml(cliente.vendedor)}</div>
+                ${tabelaHtml}
+                <div class="print-totals">
+                    <p><strong>Total Bruto:</strong> R$ ${totais.totalBruto.toFixed(2)}</p>
+                    <p><strong>Total Líquido:</strong> R$ ${totais.totalLiquido.toFixed(2)}</p>
+                </div>
+            </div>
+        `;
+        
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.top = '-9999px';
+        container.style.left = '-9999px';
+        container.style.background = 'white';
+        container.style.width = '800px';
+        container.innerHTML = htmlContent;
+        document.body.appendChild(container);
+        
+        try {
+            mostrarToast('📸 Gerando imagem...');
+            const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+            mostrarToast('✅ Imagem copiada! Cole no WhatsApp (Ctrl+V).');
+        } catch (err) {
+            console.error(err);
+            mostrarToast('❌ Erro ao copiar imagem. Verifique o console.');
+        } finally {
+            document.body.removeChild(container);
+        }
+    }
+    document.getElementById('exportarImagemBtn')?.addEventListener('click', copiarImagem);
+    
+    document.getElementById('clearAllBtn')?.addEventListener('click', () => {
+        if(confirm('Criar um novo orçamento? Os dados atuais serão perdidos.')) {
+            incrementarOrcamentoId();
+            loja = { nome: 'AutoZone Franca Loja 02', endereco: 'Av. Chico Julio Nº 2696', telefone: '16 3712-0219' };
+            cliente = { nome: '', veiculo: '', vendedor: 'Jheison Ribeiro' };
+            itens = [];
+            salvarEstado();
+            document.getElementById('lojaNome').value = loja.nome;
+            document.getElementById('lojaEndereco').value = loja.endereco;
+            document.getElementById('lojaTelefone').value = loja.telefone;
+            document.getElementById('clienteNome').value = cliente.nome;
+            document.getElementById('veiculo').value = '';
+            document.getElementById('vendedorNome').value = cliente.vendedor;
+            renderizarTabela();
+            mostrarToast(`Novo orçamento #${orcamentoId} criado.`);
+        }
+    });
+    
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle?.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        themeToggle.innerText = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    });
+    if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark'); themeToggle.innerText = '☀️'; }
+    else themeToggle.innerText = '🌙';
+    
+    function mostrarToast(msg) { const toast = document.createElement('div'); toast.className = 'toast'; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+    carregarEstado();
+</script>
+</body>
+</html>
